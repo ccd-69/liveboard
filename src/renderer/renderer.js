@@ -40,6 +40,7 @@ const audioMeter = document.getElementById('audio-meter');
 const stopHotkeyDisplay = document.getElementById('stop-hotkey-display');
 const stopHotkeyValue = document.getElementById('stop-hotkey-value');
 const checkUpdatesBtn = document.getElementById('check-updates-btn');
+const appVersionSpan = document.getElementById('app-version');
 
 function updateStopHotkeyDisplay(bind) {
     if (!stopHotkeyDisplay || !stopHotkeyValue) return;
@@ -191,27 +192,33 @@ function openEditModal(index) {
     }
 }
 
-keyBindInput.onclick = () => {
-    isListeningForKey = true;
-    keyBindInput.value = 'Press keys...';
-    keyBindInput.classList.add('listening');
-    activeModifiers.clear();
-};
+if (keyBindInput) {
+    keyBindInput.onclick = () => {
+        isListeningForKey = true;
+        keyBindInput.value = 'Press keys...';
+        keyBindInput.classList.add('listening');
+        activeModifiers.clear();
+    };
+}
 
-selectSoundBtn.onclick = async () => {
-    const filePath = await window.electronAPI.openFileDialog();
-    if (filePath) {
-        currentSelectedFilePath = filePath;
-        selectedFileNameDisp.innerText = filePath.split(/[\\\\/]/).pop();
-    }
-};
+if (selectSoundBtn) {
+    selectSoundBtn.onclick = async () => {
+        const filePath = await window.electronAPI.openFileDialog();
+        if (filePath) {
+            currentSelectedFilePath = filePath;
+            if (selectedFileNameDisp) selectedFileNameDisp.innerText = filePath.split(/[\\\\/]/).pop();
+        }
+    };
+}
 
-stopAudioBindInput.onclick = () => {
-    isListeningForKey = true;
-    stopAudioBindInput.value = 'Press keys...';
-    stopAudioBindInput.classList.add('listening');
-    activeModifiers.clear();
-};
+if (stopAudioBindInput) {
+    stopAudioBindInput.onclick = () => {
+        isListeningForKey = true;
+        stopAudioBindInput.value = 'Press keys...';
+        stopAudioBindInput.classList.add('listening');
+        activeModifiers.clear();
+    };
+}
 
 window.onkeydown = (e) => {
     if (!isListeningForKey) return;
@@ -272,99 +279,117 @@ window.onkeyup = (e) => {
     }
 };
 
-clearAllBtn.onclick = () => {
-    if (confirm('Are you sure you want to clear all keybinds and MIDI mappings?')) {
-        window.electronAPI.clearAllBinds();
-    }
-};
-
-settingsBtn.onclick = () => {
-    settingsModal.style.display = 'flex';
-    gridSizeSelect.value = String(currentGridSize);
-
-    // Defer device enumeration so it doesn't interfere with select interaction
-    setTimeout(async () => {
-        await populateAudioDevices();
-    }, 50);
-};
-
-themePresetSelect.onchange = () => {
-    customColorGroup.style.display = themePresetSelect.value === 'custom' ? 'block' : 'none';
-};
-
-saveSettingsBtn.onclick = () => {
-    currentGridSize = parseInt(gridSizeSelect.value);
-    const theme = themePresetSelect.value;
-    const customColor = accentColorPicker.value;
-    applyTheme(theme, theme === 'custom' ? customColor : null);
-
-    const selectedDevice = audioDeviceSelect.value;
-
-    const stopBind = stopAudioBindInput.value || null;
-    window.electronAPI.saveAppSettings({
-        gridSize: currentGridSize,
-        theme: theme,
-        accentColor: customColor,
-        audioDevice: selectedDevice,
-        volume: masterVolumeInput.value,
-        stopAudioBind: stopBind
-    });
-    updateStopHotkeyDisplay(stopBind);
-    createGrid(currentGridSize);
-    settingsModal.style.display = 'none';
-};
-
-closeSettingsBtn.onclick = () => { settingsModal.style.display = 'none'; };
-
-checkUpdatesBtn.onclick = () => {
-    checkUpdatesBtn.innerText = 'Checking...';
-    checkUpdatesBtn.disabled = true;
-    window.electronAPI.checkForUpdates().then((result) => {
-        if (result.updateAvailable) {
-            checkUpdatesBtn.innerText = 'Update Available!';
-            checkUpdatesBtn.style.borderColor = 'var(--accent-color)';
-            checkUpdatesBtn.style.color = 'var(--accent-color)';
-        } else {
-            checkUpdatesBtn.innerText = 'No Updates Found';
+if (clearAllBtn) {
+    clearAllBtn.onclick = () => {
+        if (confirm('Are you sure you want to clear all keybinds and MIDI mappings?')) {
+            window.electronAPI.clearAllBinds();
         }
-    }).catch((err) => {
-        console.error('Update check failed:', err);
-        checkUpdatesBtn.innerText = 'Check Failed';
-    }).finally(() => {
-        setTimeout(() => {
-            checkUpdatesBtn.innerText = 'Check for Updates';
-            checkUpdatesBtn.disabled = false;
-            checkUpdatesBtn.style.borderColor = '';
-            checkUpdatesBtn.style.color = '';
-        }, 3000);
-    });
-};
+    };
+}
 
-closeEditModalBtn.onclick = () => { editModal.style.display = 'none'; };
+if (settingsBtn) {
+    settingsBtn.onclick = () => {
+        settingsModal.style.display = 'flex';
+        if (gridSizeSelect) gridSizeSelect.value = String(currentGridSize);
 
-soundGainInput.oninput = () => {
-    gainValueDisp.innerText = parseFloat(soundGainInput.value).toFixed(2) + 'x';
-};
+        // Defer device enumeration so it doesn't interfere with select interaction
+        setTimeout(async () => {
+            await populateAudioDevices();
+        }, 50);
+    };
+}
 
-saveEditBtn.onclick = () => {
-    const bind = keyBindInput.value;
-    const midiBind = midiBindInput.value;
-    const midiAction = midiActionSelect.value;
-    const name = soundNameInput.value;
-    const gain = soundGainInput.value;
-    if (currentSelectedFilePath || bind || midiBind || name || gain !== '1') {
-        window.electronAPI.saveSoundConfig({
-            index: selectedButtonIndex,
-            filePath: currentSelectedFilePath,
-            keybind: bind || null,
-            midiBind: midiBind || null,
-            midiAction: midiAction || 'trigger',
-            customName: name || null,
-            gain: gain
+if (themePresetSelect) {
+    themePresetSelect.onchange = () => {
+        if (customColorGroup) customColorGroup.style.display = themePresetSelect.value === 'custom' ? 'block' : 'none';
+    };
+}
+
+if (saveSettingsBtn) {
+    saveSettingsBtn.onclick = () => {
+        currentGridSize = parseInt(gridSizeSelect ? gridSizeSelect.value : '4');
+        const theme = themePresetSelect ? themePresetSelect.value : 'void';
+        const customColor = accentColorPicker ? accentColorPicker.value : '#ffcc00';
+        applyTheme(theme, theme === 'custom' ? customColor : null);
+
+        const selectedDevice = audioDeviceSelect ? audioDeviceSelect.value : 'default';
+
+        const stopBind = stopAudioBindInput ? (stopAudioBindInput.value || null) : null;
+        window.electronAPI.saveAppSettings({
+            gridSize: currentGridSize,
+            theme: theme,
+            accentColor: customColor,
+            audioDevice: selectedDevice,
+            volume: masterVolumeInput ? masterVolumeInput.value : '1',
+            stopAudioBind: stopBind
         });
-    }
-    editModal.style.display = 'none';
-};
+        updateStopHotkeyDisplay(stopBind);
+        createGrid(currentGridSize);
+        settingsModal.style.display = 'none';
+    };
+}
+
+if (closeSettingsBtn) {
+    closeSettingsBtn.onclick = () => { settingsModal.style.display = 'none'; };
+}
+
+if (checkUpdatesBtn) {
+    checkUpdatesBtn.onclick = () => {
+        checkUpdatesBtn.innerText = 'Checking...';
+        checkUpdatesBtn.disabled = true;
+        window.electronAPI.checkForUpdates().then((result) => {
+            if (result.updateAvailable) {
+                checkUpdatesBtn.innerText = 'Update Available!';
+                checkUpdatesBtn.style.borderColor = 'var(--accent-color)';
+                checkUpdatesBtn.style.color = 'var(--accent-color)';
+            } else {
+                checkUpdatesBtn.innerText = 'No Updates Found';
+            }
+        }).catch((err) => {
+            console.error('Update check failed:', err);
+            checkUpdatesBtn.innerText = 'Check Failed';
+        }).finally(() => {
+            setTimeout(() => {
+                checkUpdatesBtn.innerText = 'Check for Updates';
+                checkUpdatesBtn.disabled = false;
+                checkUpdatesBtn.style.borderColor = '';
+                checkUpdatesBtn.style.color = '';
+            }, 3000);
+        });
+    };
+}
+
+if (closeEditModalBtn) {
+    closeEditModalBtn.onclick = () => { editModal.style.display = 'none'; };
+}
+
+if (soundGainInput) {
+    soundGainInput.oninput = () => {
+        if (gainValueDisp) gainValueDisp.innerText = parseFloat(soundGainInput.value).toFixed(2) + 'x';
+    };
+}
+
+if (saveEditBtn) {
+    saveEditBtn.onclick = () => {
+        const bind = keyBindInput ? keyBindInput.value : '';
+        const midiBind = midiBindInput ? midiBindInput.value : '';
+        const midiAction = midiActionSelect ? midiActionSelect.value : 'trigger';
+        const name = soundNameInput ? soundNameInput.value : '';
+        const gain = soundGainInput ? soundGainInput.value : '1';
+        if (currentSelectedFilePath || bind || midiBind || name || gain !== '1') {
+            window.electronAPI.saveSoundConfig({
+                index: selectedButtonIndex,
+                filePath: currentSelectedFilePath,
+                keybind: bind || null,
+                midiBind: midiBind || null,
+                midiAction: midiAction || 'trigger',
+                customName: name || null,
+                gain: gain
+            });
+        }
+        editModal.style.display = 'none';
+    };
+}
 
 window.electronAPI.onUpdateButtonUI((data) => {
     const buttons = document.querySelectorAll('.sound-btn');

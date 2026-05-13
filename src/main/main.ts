@@ -190,6 +190,7 @@ function createWindow() {
   });
 
   win.loadFile(path.join(__dirname, '../renderer/index.html'));
+  win.webContents.openDevTools();
 
   const settings = loadSettings();
   win.webContents.on('did-finish-load', () => {

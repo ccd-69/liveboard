@@ -95,12 +95,12 @@ function applyTheme(themeName, customAccent = null) {
 }
 
 function createGrid(size) {
+    console.log('[createGrid] Called with size:', size, 'gridContainer:', !!gridContainer);
     if (!gridContainer) {
         console.error('createGrid: gridContainer is null. DOM not ready?');
         return;
     }
     const safeSize = Number.isFinite(size) && size > 0 ? Math.floor(size) : 4;
-    console.log('createGrid called with size:', safeSize);
     gridContainer.innerHTML = '';
     gridContainer.style.gridTemplateColumns = `repeat(${safeSize}, 1fr)`;
     for (let i = 0; i < safeSize * safeSize; i++) {
@@ -117,7 +117,7 @@ function createGrid(size) {
         };
         gridContainer.appendChild(btn);
     }
-    console.log('createGrid finished. Buttons created:', gridContainer.childElementCount);
+    console.log('[createGrid] Finished. Buttons created:', gridContainer.childElementCount);
 }
 
 function showContextMenu(e, index) {
@@ -561,10 +561,12 @@ window.electronAPI.onLoadInitialSettings(async (settings) => {
 });
 
 try {
-    console.log('renderer.js executing initial setup...');
+    console.log('[INIT] renderer.js executing initial setup...');
+    console.log('[INIT] gridContainer exists:', !!gridContainer);
     applyTheme('void');
+    console.log('[INIT] Theme applied, about to create grid with size:', currentGridSize);
     createGrid(currentGridSize);
-    console.log('Initial setup complete.');
+    console.log('[INIT] Grid created. Final child count:', gridContainer ? gridContainer.childElementCount : 'N/A');
 } catch (err) {
-    console.error('Fatal error during initial setup:', err);
+    console.error('[INIT] Fatal error during initial setup:', err);
 }

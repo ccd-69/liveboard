@@ -15,7 +15,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "build": {
-    "appId": "com.coolcatdude.liveboard",
+    "appId": "com.ccd69.liveboard",
     "productName": "LiveBoard",
     "directories": {
       "output": "dist"
@@ -29,7 +29,7 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "coolcatdude",
+        "owner": "ccd-69",
         "repo": "liveboard"
       }
     ],
@@ -102,7 +102,7 @@
     }
   },
   "keywords": [],
-  "author": "",
+  "author": "ccd-69",
   "license": "ISC",
   "type": "module",
   "devDependencies": {

@@ -9,7 +9,7 @@ dist/
 
 # Compiled TypeScript in src/main (source is .ts)
 src/main/*.js
-src/main/preload.js
+!src/main/preload.js
 
 # Environment variables
 .env

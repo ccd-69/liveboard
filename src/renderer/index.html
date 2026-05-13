@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiveBoard</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --accent-color: #ffcc00;
+            --text-color: #ffffff;
+            --border-color: #333;
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg-color); 
+            color: var(--text-color); 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+        header {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #000;
+            border-bottom: 2px solid var(--border-color);
+        }
+        h1 { margin: 0; font-size: 1.5rem; color: var(--accent-color); }
+        
+        #grid-container {
+            flex: 1;
+            display: grid;
+            gap: 10px;
+            padding: 20px;
+            overflow-y: auto;
+            justify-content: center;
+            align-content: center;
+            justify-items: center;
+        }
+        .sound-btn {
+            background: var(--card-color);
+            border: 1px solid var(--border-color);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            padding: 4px;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            max-width: 100px;
+            min-width: 40px;
+            min-height: 40px;
+            overflow: hidden;
+        }
+        .sound-btn:hover {
+            border-color: var(--accent-color);
+            background: #2a2a2a;
+        }
+        .sound-btn.active {
+            background: var(--accent-color);
+            color: black;
+        }
+        .btn-label { font-weight: bold; margin-bottom: 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 90%; }
+        .btn-bind { font-size: 0.6rem; opacity: 0.7; }
+
+        .modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: var(--card-color);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            width: 400px;
+            max-width: 90%;
+        }
+        .modal-content h2 { margin-top: 0; color: var(--accent-color); }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            background: #000;
+            border: 1px solid var(--border-color);
+            color: white;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-primary {
+            background: var(--accent-color);
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        #key-bind-input {
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+    </style>
+    <style>
+        /* ... existing styles ... */
+        .context-menu {
+            position: fixed;
+            z-index: 1000;
+            background: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 5px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            min-width: 120px;
+        }
+        .context-menu-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            color: white;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .context-menu-item:hover {
+            background: var(--accent-color);
+            color: black;
+        }
+        /* ... end context menu styles ... */
+    </style>
+    <style>
+        /* Animated Theme Backgrounds */
+        @keyframes aurora-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes lava-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes ocean-wave {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes neon-pulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.15); }
+        }
+        @keyframes galaxy-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .theme-aurora {
+            background: linear-gradient(270deg, #0f2027, #203a43, #2c5364, #1a1a2e, #16213e) !important;
+            background-size: 800% 800% !important;
+            animation: aurora-shift 12s ease infinite;
+        }
+        .theme-lava {
+            background: linear-gradient(270deg, #1a0a0a, #3d0c02, #7a1e00, #b33600, #1a0a0a) !important;
+            background-size: 800% 800% !important;
+            animation: lava-shift 10s ease infinite;
+        }
+        .theme-ocean-waves {
+            background: linear-gradient(270deg, #001f3f, #003366, #004080, #0059b3, #001f3f) !important;
+            background-size: 800% 800% !important;
+            animation: ocean-wave 14s ease infinite;
+        }
+        .theme-neon-pulse {
+            background: #0a0a0a !important;
+            animation: neon-pulse 3s ease-in-out infinite;
+        }
+        .theme-neon-pulse .sound-btn {
+            box-shadow: 0 0 6px var(--accent-color), inset 0 0 4px rgba(255,255,255,0.05);
+        }
+        .theme-galaxy {
+            background: linear-gradient(270deg, #0b001a, #1a0b2e, #240b36, #0b001a, #120a1f) !important;
+            background-size: 800% 800% !important;
+            animation: galaxy-shift 16s ease infinite;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>LiveBoard</h1>
+        <div id="stop-hotkey-display" style="font-size: 0.75rem; color: var(--accent-color); background: #000; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color); display: none; align-items: center; gap: 6px;">
+            <span>Stop All Audio:</span>
+            <kbd id="stop-hotkey-value" style="background: var(--card-color); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border-color); font-family: monospace; font-size: 0.8rem;"></kbd>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-secondary" id="clear-all-btn">Clear All Binds</button>
+            <button class="btn-secondary" id="settings-btn">Settings</button>
+        </div>
+    </header>
+
+    <div id="grid-container"></div>
+
+    <div id="meter-container" style="height: 10px; background: #000; width: 100%; position: relative; overflow: hidden; border-top: 1px solid var(--border-color);">
+        <div id="audio-meter" style="height: 100%; width: 0%; background: var(--accent-color); transition: width 0.05s ease-out; box-shadow: 0 0 10px var(--accent-color);"></div>
+    </div>
+
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h2>Edit Sound Button</h2>
+            <div class="form-group">
+                <label>Display Name (Optional)</label>
+                <input type="text" id="sound-name" placeholder="e.g. Meme Sound">
+            </div>
+            <div class="form-group">
+                <label>Sound File</label>
+                <button class="btn-secondary" id="select-sound-btn">Select Audio File...</button>
+                <div id="selected-file-name" style="font-size: 0.8rem; margin-top: 5px; color: var(--accent-color);">No file selected</div>
+            </div>
+            <div class="form-group">
+                <label>Keybind</label>
+                <input type="text" id="key-bind-input" placeholder="Click to set keybind..." readonly>
+            </div>
+            <div class="form-group">
+                <label>MIDI Bind (Note or CC)</label>
+                <input type="text" id="midi-bind-input" placeholder="Click to set MIDI bind..." readonly>
+            </div>
+            <div class="form-group">
+                <label>Bind Action</label>
+                <select id="midi-action">
+                    <option value="trigger">Trigger Sound</option>
+                    <option value="volume">Control Volume</option>
+                    <option value="gain">Control Gain</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Gain (Volume Boost)</label>
+                <input type="range" id="sound-gain" min="0" max="2" step="0.01" value="1">
+                <div id="gain-value" style="font-size: 0.8rem; text-align: center; color: var(--accent-color);">1.00x</div>
+            </div>
+            <div style="text-align: right; margin-top: 2rem;">
+                <button class="btn-secondary" id="close-modal">Cancel</button>
+                <button class="btn-primary" id="save-btn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h2>Settings</h2>
+            <div class="form-group">
+                <label>Grid Size</label>
+                <select id="grid-size">
+                    <option value="4">4 x 4</option>
+                    <option value="8">8 x 8</option>
+                    <option value="16">16 x 16</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Audio Output Device</label>
+                <select id="audio-device">
+                    <option value="default">Default System Device</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Master Volume</label>
+                <input type="range" id="master-volume" min="0" max="1" step="0.01" value="1">
+            </div>
+            <div class="form-group">
+                <label>Stop Audio Keybind</label>
+                <input type="text" id="stop-audio-bind" placeholder="Click to set keybind..." readonly style="cursor: pointer; text-align: center; font-weight: bold; font-size: 1.1rem;">
+            </div>
+            <div class="form-group">
+                <label>Routing Guide</label>
+                <div style="font-size: 0.75rem; background: #000; padding: 10px; border-radius: 4px; border: 1px solid var(--border-color); color: #aaa; line-height: 1.4;">
+                    To use with Discord:<br>
+                    1. Install <b>VB-Cable</b> or <b>Voicemeeter</b>.<br>
+                    2. Set this app's Output to <b>Cable Input</b>.<br>
+                    3. Set Discord's Input to <b>Cable Output</b>.
+                </div>
+            </div>
+            <hr style="border: 1px solid var(--border-color); margin: 1rem 0;">
+            <div class="form-group">
+                <label>Theme Preset</label>
+                <select id="theme-preset">
+                    <option value="void">Void (Dark)</option>
+                    <option value="solar">Solar (Light)</option>
+                    <option value="cyberpunk">Cyberpunk (Neon)</option>
+                    <option value="matrix">Matrix (Green)</option>
+                    <option value="sunset">Sunset (Warm)</option>
+                    <option value="ocean">Ocean (Deep Blue)</option>
+                    <option value="midnight">Midnight (Navy)</option>
+                    <option value="cherry">Cherry (Red)</option>
+                    <option value="retro">Retro (Amber)</option>
+                    <option value="synthwave">Synthwave (80s)</option>
+                    <option value="nord">Nord (Arctic)</option>
+                    <option value="dracula">Dracula (Purple)</option>
+                    <option value="tokyo-night">Tokyo Night (Blue)</option>
+                    <option value="gruvbox">Gruvbox (Warm)</option>
+                    <option value="forest">Forest (Green)</option>
+                    <option value="pastel">Pastel (Soft)</option>
+                    <option value="monokai">Monokai (Code)</option>
+                    <option value="terminal">Terminal (Green)</option>
+                    <option value="high-contrast">High Contrast</option>
+                    <option value="aurora">Aurora (Animated)</option>
+                    <option value="lava">Lava (Animated)</option>
+                    <option value="ocean-waves">Ocean Waves (Animated)</option>
+                    <option value="neon-pulse">Neon Pulse (Animated)</option>
+                    <option value="galaxy">Galaxy (Animated)</option>
+                    <option value="custom">Custom Accent</option>
+                </select>
+            </div>
+            <div class="form-group" id="custom-color-group" style="display: none;">
+                <label>Accent Color</label>
+                <input type="color" id="accent-color-picker" style="height: 40px; cursor: pointer;">
+            </div>
+            <div style="text-align: right; margin-top: 2rem;">
+                <button class="btn-secondary" id="close-settings">Cancel</button>
+                <button class="btn-primary" id="save-settings">Apply & Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

@@ -39,6 +39,7 @@ const masterVolumeInput = document.getElementById('master-volume');
 const audioMeter = document.getElementById('audio-meter');
 const stopHotkeyDisplay = document.getElementById('stop-hotkey-display');
 const stopHotkeyValue = document.getElementById('stop-hotkey-value');
+const checkUpdatesBtn = document.getElementById('check-updates-btn');
 
 function updateStopHotkeyDisplay(bind) {
     if (!stopHotkeyDisplay || !stopHotkeyValue) return;
@@ -314,6 +315,30 @@ saveSettingsBtn.onclick = () => {
 };
 
 closeSettingsBtn.onclick = () => { settingsModal.style.display = 'none'; };
+
+checkUpdatesBtn.onclick = () => {
+    checkUpdatesBtn.innerText = 'Checking...';
+    checkUpdatesBtn.disabled = true;
+    window.electronAPI.checkForUpdates().then((result) => {
+        if (result.updateAvailable) {
+            checkUpdatesBtn.innerText = 'Update Available!';
+            checkUpdatesBtn.style.borderColor = 'var(--accent-color)';
+            checkUpdatesBtn.style.color = 'var(--accent-color)';
+        } else {
+            checkUpdatesBtn.innerText = 'No Updates Found';
+        }
+    }).catch((err) => {
+        console.error('Update check failed:', err);
+        checkUpdatesBtn.innerText = 'Check Failed';
+    }).finally(() => {
+        setTimeout(() => {
+            checkUpdatesBtn.innerText = 'Check for Updates';
+            checkUpdatesBtn.disabled = false;
+            checkUpdatesBtn.style.borderColor = '';
+            checkUpdatesBtn.style.color = '';
+        }, 3000);
+    });
+};
 
 closeEditModalBtn.onclick = () => { editModal.style.display = 'none'; };
 

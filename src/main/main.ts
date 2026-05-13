@@ -371,6 +371,17 @@ app.whenReady().then(() => {
     if (DEBUG) console.error('Auto-updater check failed:', err);
   });
 
+  // Manual update check from renderer
+  ipcMain.handle('check-for-updates', async () => {
+    try {
+      const result = await autoUpdater.checkForUpdatesAndNotify();
+      return { updateAvailable: !!result?.updateInfo, version: result?.updateInfo?.version || null };
+    } catch (err) {
+      if (DEBUG) console.error('Manual update check failed:', err);
+      return { updateAvailable: false, version: null, error: String(err) };
+    }
+  });
+
   const settings = loadSettings();
   stopAudioBind = settings.stopAudioBind || null;
   Object.entries(settings.sounds || {}).forEach(([idx, config]: [string, any]) => {
